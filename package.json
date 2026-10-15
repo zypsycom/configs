@@ -1,0 +1,69 @@
+{
+  "name": "@zypsy/configs",
+  "version": "0.1.0",
+  "description": "Shared tooling configuration for Zypsy repositories: oxlint, oxfmt and TypeScript",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zypsycom/configs.git"
+  },
+  "type": "module",
+  "files": [
+    "src"
+  ],
+  "exports": {
+    "./oxlint": {
+      "types": "./src/oxlint/index.d.ts",
+      "default": "./src/oxlint/index.js"
+    },
+    "./oxlint-plugin": {
+      "types": "./src/oxlint/plugin.d.ts",
+      "default": "./src/oxlint/plugin.js"
+    },
+    "./oxfmt": {
+      "types": "./src/oxfmt/index.d.ts",
+      "default": "./src/oxfmt/index.js"
+    },
+    "./tsconfig/next.json": "./src/tsconfig/next.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "lint": "oxlint --disable-nested-config",
+    "lint:fix": "oxlint --disable-nested-config --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc",
+    "test": "node --test test/*.test.js",
+    "prepush": "pnpm lint:fix && pnpm format && pnpm typecheck && pnpm test"
+  },
+  "peerDependencies": {
+    "oxfmt": ">=0.73.0",
+    "oxlint": "^1.88.0",
+    "oxlint-tsgolint": ">=7.0.2004",
+    "typescript": ">=7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "oxfmt": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.88.0",
+    "@types/node": "^24.19.1",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "oxlint-tsgolint": "7.0.2004",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "pnpm@12.9.1",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
