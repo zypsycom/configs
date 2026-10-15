@@ -1,5 +1,6 @@
-/** @type {import("oxfmt").OxfmtConfig} */
-const config = {
+import type { OxfmtConfig } from "oxfmt";
+
+const config: OxfmtConfig = {
   printWidth: 80,
   sortPackageJson: false,
   sortTailwindcss: {},

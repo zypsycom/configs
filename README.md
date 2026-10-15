@@ -9,7 +9,7 @@ Shared tooling configuration for Zypsy repositories:
 | `@zypsy/configs/oxfmt`              | oxfmt config: Tailwind class sorting, import sorting, 80 columns                               |
 | `@zypsy/configs/tsconfig/next.json` | `compilerOptions` shared by the Next.js apps                                                   |
 
-Everything ships as plain ESM JavaScript with `.d.ts` types, no build step. Node does not strip types inside `node_modules`, so the package cannot ship `.ts`; consumers keep their own `oxlint.config.ts` and `oxfmt.config.ts`.
+The sources are TypeScript in `src`, built by `vp pack` (Vite+, on tsdown and Rolldown) into `dist` as ESM `.js` with `.d.ts`. Node does not strip types inside `node_modules`, so the package ships the build, and consumers keep their own `oxlint.config.ts` and `oxfmt.config.ts`.
 
 ## Install
 
@@ -96,10 +96,11 @@ Rules still in oxlint's nursery stay off until they are stable: `no-unnecessary-
 
 ```bash
 pnpm install
-pnpm prepush   # lint fix, format, type check, smoke test
+pnpm build     # vp pack: src -> dist
+pnpm prepush   # build, lint fix, format, type check, smoke test
 ```
 
-`pnpm test` lints `test/fixtures/consumer` through the shared config and checks that every selector, `func-style`, the ban on `e` and a type-aware rule fire.
+`pnpm test` lints `test/fixtures/consumer` through the built config in `dist` and checks that every selector, `func-style`, the ban on `e` and a type-aware rule fire.
 
 ## Releasing
 

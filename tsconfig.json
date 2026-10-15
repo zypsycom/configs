@@ -14,5 +14,5 @@
     "types": ["node"]
   },
   "include": ["src", "test", "*.ts"],
-  "exclude": ["test/fixtures"]
+  "exclude": ["test/fixtures", "dist"]
 }

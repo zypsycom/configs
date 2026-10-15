@@ -1,8 +1,9 @@
-/** @typedef {string | { selector: string; message?: string }} RestrictedSyntaxOption */
+import type { Node, Plugin, Rule } from "@oxlint/plugins";
+
+type RestrictedSyntaxOption = string | { selector: string; message?: string };
 
 // oxlint has no native `no-restricted-syntax`, this is ESLint's rule over oxlint's selector engine.
-/** @type {import("@oxlint/plugins").Rule} */
-const restrictedSyntax = {
+const restrictedSyntax: Rule = {
   meta: {
     type: "suggestion",
     docs: { description: "Disallow syntax matched by ESLint-style selectors" },
@@ -26,27 +27,23 @@ const restrictedSyntax = {
   },
   create: (context) =>
     Object.fromEntries(
-      /** @type {RestrictedSyntaxOption[]} */ (context.options).map(
-        (option) => {
-          const { selector, message } =
-            typeof option === "string" ? { selector: option } : option;
-          return [
-            selector,
-            /** @param {import("@oxlint/plugins").Node} node */
-            (node) => {
-              context.report({
-                node,
-                message: message ?? `Using '${selector}' is not allowed.`,
-              });
-            },
-          ];
-        },
-      ),
+      (context.options as RestrictedSyntaxOption[]).map((option) => {
+        const { selector, message } =
+          typeof option === "string" ? { selector: option } : option;
+        return [
+          selector,
+          (node: Node) => {
+            context.report({
+              node,
+              message: message ?? `Using '${selector}' is not allowed.`,
+            });
+          },
+        ];
+      }),
     ),
 };
 
-/** @type {import("@oxlint/plugins").Plugin} */
-const plugin = {
+const plugin: Plugin = {
   meta: { name: "zypsy" },
   rules: { "restricted-syntax": restrictedSyntax },
 };

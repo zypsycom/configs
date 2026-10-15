@@ -1,10 +1,10 @@
 import { fileURLToPath } from "node:url";
+import type { OxlintConfig } from "oxlint";
 
 // Ported from @stanfordspezi/spezi-web-configurations (ESLint) plus the Zypsy house rules.
 // Left off until they leave oxlint's nursery: no-unnecessary-condition, prefer-optional-chain,
 // import/export, no-undef, react/require-render-return.
-/** @type {import("oxlint").OxlintConfig} */
-const config = {
+const config: OxlintConfig = {
   jsPlugins: [fileURLToPath(import.meta.resolve("./plugin.js"))],
   plugins: ["import", "react", "unicorn"],
   categories: {

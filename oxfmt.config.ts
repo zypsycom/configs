@@ -1,4 +1,4 @@
 import { defineConfig } from "oxfmt";
-import zypsy from "./src/oxfmt/index.js";
+import zypsy from "./dist/oxfmt/index.js";
 
 export default defineConfig(zypsy);

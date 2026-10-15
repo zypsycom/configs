@@ -9,40 +9,46 @@
   },
   "type": "module",
   "files": [
-    "src"
+    "dist"
   ],
   "exports": {
     "./oxlint": {
-      "types": "./src/oxlint/index.d.ts",
-      "default": "./src/oxlint/index.js"
+      "types": "./dist/oxlint/index.d.ts",
+      "default": "./dist/oxlint/index.js"
     },
     "./oxlint-plugin": {
-      "types": "./src/oxlint/plugin.d.ts",
-      "default": "./src/oxlint/plugin.js"
+      "types": "./dist/oxlint/plugin.d.ts",
+      "default": "./dist/oxlint/plugin.js"
     },
     "./oxfmt": {
-      "types": "./src/oxfmt/index.d.ts",
-      "default": "./src/oxfmt/index.js"
+      "types": "./dist/oxfmt/index.d.ts",
+      "default": "./dist/oxfmt/index.js"
     },
-    "./tsconfig/next.json": "./src/tsconfig/next.json",
+    "./tsconfig/next.json": "./dist/tsconfig/next.json",
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "vp pack",
     "lint": "oxlint --disable-nested-config",
     "lint:fix": "oxlint --disable-nested-config --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "typecheck": "tsc",
-    "test": "node --test test/*.test.js",
-    "prepush": "pnpm lint:fix && pnpm format && pnpm typecheck && pnpm test"
+    "test": "node --test test/*.test.ts",
+    "prepack": "pnpm build",
+    "prepush": "pnpm build && pnpm lint:fix && pnpm format && pnpm typecheck && pnpm test"
   },
   "peerDependencies": {
+    "@oxlint/plugins": "^1.88.0",
     "oxfmt": ">=0.73.0",
     "oxlint": "^1.88.0",
     "oxlint-tsgolint": ">=7.0.2004",
     "typescript": ">=7.0.0"
   },
   "peerDependenciesMeta": {
+    "@oxlint/plugins": {
+      "optional": true
+    },
     "oxfmt": {
       "optional": true
     },
@@ -56,7 +62,8 @@
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
     "oxlint-tsgolint": "7.0.2004",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite-plus": "1.2.0"
   },
   "engines": {
     "node": ">=22.18.0"

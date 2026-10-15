@@ -8,15 +8,18 @@ const oxlint = fileURLToPath(
   new URL("../node_modules/.bin/oxlint", import.meta.url),
 );
 
-/** @typedef {{ code: string; message: string; labels: Array<{ span: { line: number } }> }} Diagnostic */
+interface Diagnostic {
+  code: string;
+  message: string;
+  labels: Array<{ span: { line: number } }>;
+}
 
 const lint = () => {
   const result = spawnSync(oxlint, ["-f", "json", "src"], {
     cwd: consumer,
     encoding: "utf8",
   });
-  /** @type {{ diagnostics: Diagnostic[] }} */
-  const report = JSON.parse(result.stdout);
+  const report = JSON.parse(result.stdout) as { diagnostics: Diagnostic[] };
   return report.diagnostics.map((diagnostic) => ({
     rule: diagnostic.code,
     message: diagnostic.message,
@@ -26,8 +29,7 @@ const lint = () => {
 
 const diagnostics = lint();
 
-/** @param {string} rule @param {number} line @param {string} [message] */
-const hasDiagnostic = (rule, line, message) =>
+const hasDiagnostic = (rule: string, line: number, message?: string) =>
   diagnostics.some(
     (diagnostic) =>
       diagnostic.rule === rule &&
@@ -52,23 +54,23 @@ const restrictedSyntax = [
 ];
 
 for (const { line, message } of restrictedSyntax) {
-  test(`zypsy/restricted-syntax: ${message}`, () => {
+  void test(`zypsy/restricted-syntax: ${message}`, () => {
     assert.ok(hasDiagnostic("zypsy(restricted-syntax)", line, message));
   });
 }
 
-test("FileList access stays allowed", () => {
+void test("FileList access stays allowed", () => {
   assert.ok(!diagnostics.some((diagnostic) => diagnostic.line === 11));
 });
 
-test("func-style rejects function declarations", () => {
+void test("func-style rejects function declarations", () => {
   assert.ok(hasDiagnostic("eslint(func-style)", 1));
 });
 
-test("a variable named `e` is rejected", () => {
+void test("a variable named `e` is rejected", () => {
   assert.ok(hasDiagnostic("eslint(id-denylist)", 12));
 });
 
-test("type-aware rules run", () => {
+void test("type-aware rules run", () => {
   assert.ok(hasDiagnostic("typescript(no-floating-promises)", 17));
 });
