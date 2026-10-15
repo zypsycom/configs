@@ -1,0 +1,40 @@
+# Publishes to npm when a GitHub release is published, through npm trusted publishing:
+# GitHub's OIDC token proves which workflow is publishing, so there is no npm token
+# anywhere, and npm attaches provenance on its own.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          cache: "pnpm"
+          node-version-file: ".nvmrc"
+          registry-url: "https://registry.npmjs.org"
+      # Trusted publishing needs npm 11.5.1 or later.
+      - name: Update npm
+        run: npm install --global npm@latest
+      - name: Check the tag matches the version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: test "$TAG" = "v$(node -p 'require("./package.json").version')"
+      - name: Install Node Dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Publish
+        run: npm publish
