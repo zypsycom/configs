@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-const consumer = fileURLToPath(new URL("fixtures/consumer/", import.meta.url));
+const fixture = (name: string) =>
+  fileURLToPath(new URL(`fixtures/${name}/`, import.meta.url));
 const oxlint = fileURLToPath(
   new URL("../node_modules/.bin/oxlint", import.meta.url),
 );
@@ -14,9 +15,9 @@ interface Diagnostic {
   labels: Array<{ span: { line: number } }>;
 }
 
-const lint = () => {
+const lint = (name: string) => {
   const result = spawnSync(oxlint, ["-f", "json", "src"], {
-    cwd: consumer,
+    cwd: fixture(name),
     encoding: "utf8",
   });
   const report = JSON.parse(result.stdout) as { diagnostics: Diagnostic[] };
@@ -27,7 +28,7 @@ const lint = () => {
   }));
 };
 
-const diagnostics = lint();
+const diagnostics = lint("consumer");
 
 const hasDiagnostic = (rule: string, line: number, message?: string) =>
   diagnostics.some(
@@ -43,7 +44,7 @@ const restrictedSyntax = [
   {
     line: 7,
     message:
-      "Arrow functions should not have explicit return types as per team agreement.",
+      "Arrow functions should not have explicit return types, let TypeScript infer them.",
   },
   { line: 9, message: "Use .at(0) instead of [0] for array access" },
   {
@@ -73,4 +74,11 @@ void test("a variable named `e` is rejected", () => {
 
 void test("type-aware rules run", () => {
   assert.ok(hasDiagnostic("typescript(no-floating-promises)", 17));
+});
+
+void test("a project can add selectors and keep the shared ones", () => {
+  const extended = lint("extended");
+  const messages = extended.map((diagnostic) => diagnostic.message);
+  assert.ok(messages.includes("Use a union of string literals."));
+  assert.ok(messages.includes("Using 'FunctionDeclaration' is not allowed."));
 });

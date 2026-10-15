@@ -1,7 +1,30 @@
 import { fileURLToPath } from "node:url";
 import type { OxlintConfig } from "oxlint";
+import type { RestrictedSyntaxOption } from "./plugin.js";
 
-// Ported from @stanfordspezi/spezi-web-configurations (ESLint) plus the Zypsy house rules.
+// The house style in `src/**`, for `zypsy/restricted-syntax`. Exported so a project
+// that adds its own selectors can keep these: options replace, they do not merge.
+export const restrictedSyntax: RestrictedSyntaxOption[] = [
+  "FunctionExpression",
+  "FunctionDeclaration",
+  {
+    selector: "ArrowFunctionExpression[returnType]",
+    message:
+      "Arrow functions should not have explicit return types, let TypeScript infer them.",
+  },
+  {
+    selector:
+      "MemberExpression[computed=true]:not(MemberExpression:has(MemberExpression > Identifier[name='files'])) > Literal[value=0]",
+    message: "Use .at(0) instead of [0] for array access",
+  },
+  {
+    selector:
+      "MemberExpression[computed=true] > BinaryExpression[operator='-'] > MemberExpression[property.name='length']",
+    message:
+      "Use .at(-1) instead of [array.length - 1] for accessing the last element",
+  },
+];
+
 // Left off until they leave oxlint's nursery: no-unnecessary-condition, prefer-optional-chain,
 // import/export, no-undef, react/require-render-return.
 const config: OxlintConfig = {
@@ -379,27 +402,7 @@ const config: OxlintConfig = {
     {
       files: ["src/**/*.{ts,tsx}"],
       rules: {
-        "zypsy/restricted-syntax": [
-          "error",
-          "FunctionExpression",
-          "FunctionDeclaration",
-          {
-            selector: "ArrowFunctionExpression[returnType]",
-            message:
-              "Arrow functions should not have explicit return types as per team agreement.",
-          },
-          {
-            selector:
-              "MemberExpression[computed=true]:not(MemberExpression:has(MemberExpression > Identifier[name='files'])) > Literal[value=0]",
-            message: "Use .at(0) instead of [0] for array access",
-          },
-          {
-            selector:
-              "MemberExpression[computed=true] > BinaryExpression[operator='-'] > MemberExpression[property.name='length']",
-            message:
-              "Use .at(-1) instead of [array.length - 1] for accessing the last element",
-          },
-        ],
+        "zypsy/restricted-syntax": ["error", ...restrictedSyntax],
         "func-style": ["error", "expression"],
         "react/set-state-in-effect": "off",
         "react/refs": "off",

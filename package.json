@@ -1,13 +1,31 @@
 {
   "name": "@zypsy/configs",
   "version": "0.1.0",
-  "description": "Shared tooling configuration for Zypsy repositories: oxlint, oxfmt and TypeScript",
-  "license": "MIT",
+  "description": "Zypsy's shared oxlint, oxfmt and TypeScript configuration",
+  "keywords": [
+    "oxlint",
+    "oxfmt",
+    "oxc",
+    "lint",
+    "format",
+    "tsconfig",
+    "typescript",
+    "react",
+    "nextjs",
+    "config"
+  ],
+  "homepage": "https://github.com/zypsycom/configs#readme",
+  "bugs": {
+    "url": "https://github.com/zypsycom/configs/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zypsycom/configs.git"
   },
+  "license": "MIT",
+  "author": "Zypsy",
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist"
   ],

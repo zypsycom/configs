@@ -1,6 +1,8 @@
 import type { Node, Plugin, Rule } from "@oxlint/plugins";
 
-type RestrictedSyntaxOption = string | { selector: string; message?: string };
+export type RestrictedSyntaxOption =
+  | string
+  | { selector: string; message?: string };
 
 // oxlint has no native `no-restricted-syntax`, this is ESLint's rule over oxlint's selector engine.
 const restrictedSyntax: Rule = {

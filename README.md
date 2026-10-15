@@ -1,15 +1,18 @@
 # @zypsy/configs
 
-Shared tooling configuration for Zypsy repositories:
+Zypsy's shared configuration for JavaScript and TypeScript projects: linting with [oxlint](https://oxc.rs/docs/guide/usage/linter), formatting with [oxfmt](https://oxc.rs/docs/guide/usage/formatter) and a TypeScript base for Next.js apps.
 
-| Import                              | What                                                                                           |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `@zypsy/configs/oxlint`             | oxlint config, type-aware, ported from `@stanfordspezi/spezi-web-configurations` + house rules |
-| `@zypsy/configs/oxlint-plugin`      | the `zypsy` oxlint JS plugin, already loaded by the oxlint config                              |
-| `@zypsy/configs/oxfmt`              | oxfmt config: Tailwind class sorting, import sorting, 80 columns                               |
-| `@zypsy/configs/tsconfig/next.json` | `compilerOptions` shared by the Next.js apps                                                   |
+| Import                              | What                                                    |
+| ----------------------------------- | ------------------------------------------------------- |
+| `@zypsy/configs/oxlint`             | oxlint config, strict and type-aware                    |
+| `@zypsy/configs/oxlint-plugin`      | the `zypsy` oxlint plugin, loaded by the oxlint config  |
+| `@zypsy/configs/oxfmt`              | oxfmt config: Tailwind class sorting and import sorting |
+| `@zypsy/configs/tsconfig/next.json` | `compilerOptions` for a Next.js app                     |
 
-The sources are TypeScript in `src`, built by `vp pack` (Vite+, on tsdown and Rolldown) into `dist` as ESM `.js` with `.d.ts`. Node does not strip types inside `node_modules`, so the package ships the build, and consumers keep their own `oxlint.config.ts` and `oxfmt.config.ts`.
+## Requirements
+
+- Node 22.18 or later.
+- `oxlint` 1.88 or later and `oxlint-tsgolint` 7 for the oxlint config, `oxfmt` 0.73 or later for the oxfmt config, TypeScript 7 for the tsconfig. They are peer dependencies, so the versions are yours to pin.
 
 ## Install
 
@@ -17,9 +20,7 @@ The sources are TypeScript in `src`, built by `vp pack` (Vite+, on tsdown and Ro
 pnpm add -D @zypsy/configs oxlint oxlint-tsgolint oxfmt
 ```
 
-It is a public npm package: installing it needs no token or `.npmrc`, on a laptop, in CI or on Vercel.
-
-## Use
+## oxlint
 
 `oxlint.config.ts`:
 
@@ -29,13 +30,65 @@ import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [zypsy],
-  // Only what is specific to this repository.
-  ignorePatterns: ["src/utils/supabase/databaseTypes.ts"],
+});
+```
+
+Add what is specific to your project after `extends`, for example:
+
+```ts
+export default defineConfig({
+  extends: [zypsy],
+  ignorePatterns: ["src/generated/**"],
+  settings: { react: { version: "19.3.0" } },
   overrides: [{ files: ["src/env.js"], env: { node: true } }],
 });
 ```
 
-`oxfmt.config.ts` (oxfmt has no `extends`, spread the shared config):
+What the config does:
+
+- **Type-aware.** The typescript-eslint `strict-type-checked` and `stylistic-type-checked` rules run through `oxlint-tsgolint`: floating promises, unsafe `any`, unnecessary assertions, deprecated APIs.
+- **React and the React Compiler rules**: rules of hooks, exhaustive dependencies, purity, immutability. `settings.react.version` is set to `19.3.0`; set yours if it differs.
+- **Imports**: no cycles, no duplicate imports, no default exports (except in `src/app`, stories and config files), no file extensions.
+- **House style** in `src/**`:
+  - Arrow functions only, no `function` declarations or expressions.
+  - No explicit return types on arrow functions: inference is enough.
+  - `.at(0)` and `.at(-1)` instead of `array[0]` and `array[array.length - 1]`, which pairs with `noUncheckedIndexedAccess`.
+  - No variable or parameter named `e`: write `event` or `error`.
+- Rules still in oxlint's nursery stay off until they are stable: `no-unnecessary-condition`, `prefer-optional-chain`, `import/export`, `no-undef`, `react/require-render-return`.
+
+## oxlint plugin
+
+oxlint has no native `no-restricted-syntax`, so the `zypsy` plugin provides it as `zypsy/restricted-syntax`, over oxlint's selector engine. The oxlint config already loads the plugin and uses it for the house style above. Rule options replace the shared ones rather than merge, so to ban more syntax, spread the shared selectors, exported as `restrictedSyntax`, in an override for the same files:
+
+```ts
+import zypsy, { restrictedSyntax } from "@zypsy/configs/oxlint";
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  extends: [zypsy],
+  overrides: [
+    {
+      files: ["src/**/*.{ts,tsx}"],
+      rules: {
+        "zypsy/restricted-syntax": [
+          "error",
+          ...restrictedSyntax,
+          {
+            selector: "TSEnumDeclaration",
+            message: "Use a union of string literals.",
+          },
+        ],
+      },
+    },
+  ],
+});
+```
+
+A disable comment names the rule like any other: `// oxlint-disable-next-line zypsy/restricted-syntax`.
+
+## oxfmt
+
+oxfmt has no `extends`, so spread the shared config in `oxfmt.config.ts`:
 
 ```ts
 import zypsy from "@zypsy/configs/oxfmt";
@@ -47,27 +100,22 @@ export default defineConfig({
 });
 ```
 
-`tsconfig.json`:
+It formats at 80 columns, sorts Tailwind classes and sorts imports: builtin, external, internal (`@/`), then relative, with no blank lines between groups.
+
+## tsconfig
 
 ```json
 {
   "extends": "@zypsy/configs/tsconfig/next.json",
   "compilerOptions": { "paths": { "@/*": ["./src/*"] } },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.cjs",
-    "**/*.js",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules", ".next"]
 }
 ```
 
-`paths`, `include` and `exclude` stay in the repository, because TypeScript resolves them relative to the file that declares them.
+Strict, with `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `checkJs` and the Next.js plugin. `paths`, `include` and `exclude` stay in your `tsconfig.json`, because TypeScript resolves them relative to the file that declares them.
 
-`package.json` scripts:
+## Scripts
 
 ```json
 {
@@ -78,42 +126,10 @@ export default defineConfig({
 }
 ```
 
-The oxlint config sets `settings.react.version` to `19.3.0`; a repository on another React version overrides it.
+## Contributing
 
-## The `zypsy` plugin
+The sources are TypeScript in `src`, built by `vp pack` into `dist`. `pnpm prepush` builds, lints, formats, type-checks and runs the smoke test, which lints a fixture through the built config and checks that the house rules fire. A GitHub release tagged `v<version>` publishes the package to npm with provenance.
 
-oxlint has no native `no-restricted-syntax`, so `zypsy/restricted-syntax` is that rule over oxlint's selector engine. The config enables it in `src/**/*.{ts,tsx}` with these selectors:
+## License
 
-- `FunctionDeclaration`, `FunctionExpression`: arrow functions only.
-- `ArrowFunctionExpression[returnType]`: no explicit return types.
-- `array[0]` (except on a `files` list) and `array[array.length - 1]`: use `.at(0)` and `.at(-1)`.
-
-A disable comment names it like any other rule: `// oxlint-disable-next-line zypsy/restricted-syntax`.
-
-Rules still in oxlint's nursery stay off until they are stable: `no-unnecessary-condition`, `prefer-optional-chain`, `import/export`, `no-undef`, `react/require-render-return`.
-
-## Development
-
-```bash
-pnpm install
-pnpm build     # vp pack: src -> dist
-pnpm prepush   # build, lint fix, format, type check, smoke test
-```
-
-`pnpm test` lints `test/fixtures/consumer` through the built config in `dist` and checks that every selector, `func-style`, the ban on `e` and a type-aware rule fire.
-
-## Releasing
-
-Publishing runs in `.github/workflows/release.yml` when a GitHub release is published. It uses npm trusted publishing: GitHub's OIDC token proves which workflow publishes, so there is no npm token anywhere and npm attaches provenance itself.
-
-1. Bump `version` in `package.json` and merge.
-2. Create a GitHub release with the tag `v<version>`. The workflow checks the tag against `package.json`, runs CI and publishes.
-
-### One-time setup
-
-1. On npmjs.com: **Add an Organization** named `zypsy`, plan **Unlimited public packages** (free). The account needs two-factor authentication.
-2. Make the GitHub repository public. npm only attaches provenance to packages published from a public repository.
-3. Publish the first version by hand, because trusted publishing can only be configured on a package that exists: `npm login`, then `npm publish --access public` from a clean checkout of `main`.
-4. On the package page, **Settings → Trusted publishing**: GitHub Actions, organization `zypsycom`, repository `configs`, workflow `release.yml`, environment `npm`.
-5. In the repository, **Settings → Environments**: create `npm`, optionally with required reviewers.
-6. On the package page, **Settings → Publishing access**: **Require two-factor authentication and disallow tokens**. Trusted publishing keeps working.
+[MIT](LICENSE)
