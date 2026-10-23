@@ -376,6 +376,10 @@ const config: OxlintConfig = {
             disallowTypeAnnotations: false,
           },
         ],
+        // With verbatimModuleSyntax, `import { type A }` still compiles to `import "module"`,
+        // so the module runs at runtime and a server module ends up in the client bundle.
+        // The fix above writes exactly that; this rule turns it into `import type { A }`.
+        "typescript/no-import-type-side-effects": "error",
         "typescript/no-empty-interface": "off",
         "id-denylist": ["error", "e"],
       },
