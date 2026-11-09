@@ -128,7 +128,11 @@ Strict, with `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `checkJs` and t
 
 ## Contributing
 
-The sources are TypeScript in `src`, built by `vp pack` into `dist`. `pnpm prepush` builds, lints, formats, type-checks and runs the smoke test, which lints a fixture through the built config and checks that the house rules fire. A GitHub release tagged `v<version>` publishes the package to npm with provenance.
+The sources are TypeScript in `src`, built by `vp pack` into `dist`. `pnpm prepush` builds, lints, formats, type-checks and runs the smoke test, which lints a fixture through the built config and checks that the house rules fire.
+
+Pull request titles are [conventional commits](https://www.conventionalcommits.org/), checked in CI, because the squash merge makes the title the commit message: `fix: …` for a patch, `feat: …` for a minor, `feat!: …` (or a `BREAKING CHANGE:` footer) for a breaking change, a minor while the version is below 1.0. `chore:`, `docs:`, `ci:` and the like release nothing.
+
+Releases are automated with [release-please](https://github.com/googleapis/release-please). Every merge to `main` updates a release pull request with the next version and the changelog. Merging it tags `v<version>`, creates the GitHub release and publishes the package to npm with provenance. Don't edit the version or `CHANGELOG.md` by hand.
 
 ## License
 
