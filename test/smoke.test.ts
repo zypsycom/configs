@@ -11,6 +11,7 @@ const oxlint = fileURLToPath(
 
 interface Diagnostic {
   code: string;
+  filename: string;
   message: string;
   labels: Array<{ span: { line: number } }>;
 }
@@ -23,6 +24,7 @@ const lint = (name: string) => {
   const report = JSON.parse(result.stdout) as { diagnostics: Diagnostic[] };
   return report.diagnostics.map((diagnostic) => ({
     rule: diagnostic.code,
+    file: diagnostic.filename,
     message: diagnostic.message,
     line: diagnostic.labels.at(0)?.span.line,
   }));
@@ -30,9 +32,15 @@ const lint = (name: string) => {
 
 const diagnostics = lint("consumer");
 
-const hasDiagnostic = (rule: string, line: number, message?: string) =>
+const hasDiagnostic = (
+  rule: string,
+  line: number,
+  message?: string,
+  file = "src/violations.ts",
+) =>
   diagnostics.some(
     (diagnostic) =>
+      diagnostic.file === file &&
       diagnostic.rule === rule &&
       diagnostic.line === line &&
       (message === undefined || diagnostic.message === message),
@@ -74,6 +82,17 @@ void test("a variable named `e` is rejected", () => {
 
 void test("type-aware rules run", () => {
   assert.ok(hasDiagnostic("typescript(no-floating-promises)", 17));
+});
+
+const sideEffects = "typescript(no-import-type-side-effects)";
+
+void test("an import of inline types only is rejected", () => {
+  assert.ok(hasDiagnostic(sideEffects, 1, undefined, "src/imports.ts"));
+});
+
+void test("mixed and top-level type imports stay allowed", () => {
+  assert.ok(!hasDiagnostic(sideEffects, 2, undefined, "src/imports.ts"));
+  assert.ok(!hasDiagnostic(sideEffects, 3, undefined, "src/imports.ts"));
 });
 
 void test("a project can add selectors and keep the shared ones", () => {

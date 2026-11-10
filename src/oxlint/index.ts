@@ -376,6 +376,7 @@ const config: OxlintConfig = {
             disallowTypeAnnotations: false,
           },
         ],
+        "typescript/no-import-type-side-effects": "error",
         "typescript/no-empty-interface": "off",
         "id-denylist": ["error", "e"],
       },

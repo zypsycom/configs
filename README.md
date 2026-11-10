@@ -48,7 +48,7 @@ What the config does:
 
 - **Type-aware.** The typescript-eslint `strict-type-checked` and `stylistic-type-checked` rules run through `oxlint-tsgolint`: floating promises, unsafe `any`, unnecessary assertions, deprecated APIs.
 - **React and the React Compiler rules**: rules of hooks, exhaustive dependencies, purity, immutability. `settings.react.version` is set to `19.3.0`; set yours if it differs.
-- **Imports**: no cycles, no duplicate imports, no default exports (except in `src/app`, stories and config files), no file extensions.
+- **Imports**: no cycles, no duplicate imports, no `import { type A }` that leaves a side-effect import behind (write `import type { A }`), no default exports (except in `src/app`, stories and config files), no file extensions.
 - **House style** in `src/**`:
   - Arrow functions only, no `function` declarations or expressions.
   - No explicit return types on arrow functions: inference is enough.
