@@ -1,19 +1,51 @@
-# Publishes to npm when a GitHub release is published, through npm trusted publishing:
-# GitHub's OIDC token proves which workflow is publishing, so there is no npm token
-# anywhere, and npm attaches provenance on its own.
+# Releases through release-please: every push to main updates a release pull request
+# with the next version and the changelog, read from conventional commit messages.
+# Merging that pull request tags `v<version>`, creates the GitHub release and publishes
+# to npm through trusted publishing: GitHub's OIDC token proves which workflow is
+# publishing, so there is no npm token anywhere, and npm attaches provenance on its own.
+#
+# Publishing stays in this file because npm's trusted publisher is bound to its name,
+# and it can't move to a workflow on the `release` event: a release created with
+# GITHUB_TOKEN triggers no other workflow.
 
 name: Release
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+
+permissions: {}
 
 jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   check:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
     uses: ./.github/workflows/ci.yml
 
   publish:
-    needs: check
+    needs: [release-please, check]
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     environment: npm
     permissions:
@@ -21,6 +53,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
@@ -32,7 +67,7 @@ jobs:
         run: npm install --global npm@latest
       - name: Check the tag matches the version
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
         run: test "$TAG" = "v$(node -p 'require("./package.json").version')"
       - name: Install Node Dependencies
         run: pnpm install --frozen-lockfile
