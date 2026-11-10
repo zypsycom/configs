@@ -1,6 +1,6 @@
 {
   "name": "@zypsy/configs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zypsy's shared oxlint, oxfmt and TypeScript configuration",
   "keywords": [
     "oxlint",
