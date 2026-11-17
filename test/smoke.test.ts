@@ -69,7 +69,21 @@ for (const { line, message } of restrictedSyntax) {
 }
 
 void test("FileList access stays allowed", () => {
-  assert.ok(!diagnostics.some((diagnostic) => diagnostic.line === 11));
+  assert.ok(
+    !diagnostics.some(
+      (diagnostic) =>
+        diagnostic.file === "src/violations.ts" && diagnostic.line === 11,
+    ),
+  );
+});
+
+void test("type predicates keep their explicit return type", () => {
+  assert.ok(
+    !diagnostics.some(
+      (diagnostic) =>
+        diagnostic.file === "src/violations.ts" && diagnostic.line === 19,
+    ),
+  );
 });
 
 void test("func-style rejects function declarations", () => {
@@ -82,6 +96,21 @@ void test("a variable named `e` is rejected", () => {
 
 void test("type-aware rules run", () => {
   assert.ok(hasDiagnostic("typescript(no-floating-promises)", 17));
+});
+
+void test("refs are not read during render", () => {
+  assert.ok(hasDiagnostic("react(refs)", 5, undefined, "src/compiler.tsx"));
+});
+
+void test("state is not set synchronously in an effect", () => {
+  assert.ok(
+    hasDiagnostic(
+      "react(set-state-in-effect)",
+      11,
+      undefined,
+      "src/compiler.tsx",
+    ),
+  );
 });
 
 const sideEffects = "typescript(no-import-type-side-effects)";
@@ -132,6 +161,20 @@ void test("the house style covers JavaScript too", () => {
   const monorepo = lint("monorepo", "packages");
   assert.ok(
     ruleAt(monorepo, "eslint(func-style)", "packages/web/src/lib/legacy.js"),
+  );
+});
+
+void test("config files export default and import with extensions", () => {
+  const monorepo = lint("monorepo", "packages");
+  const config = "packages/web/next.config.js";
+  assert.ok(!ruleAt(monorepo, "import(no-default-export)", config));
+  assert.ok(!ruleAt(monorepo, "import(extensions)", config));
+  assert.ok(
+    ruleAt(
+      monorepo,
+      "import(extensions)",
+      "packages/web/src/lib/withExtension.ts",
+    ),
   );
 });
 
