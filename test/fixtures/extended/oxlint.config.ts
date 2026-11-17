@@ -5,7 +5,7 @@ export default defineConfig({
   extends: [zypsy],
   overrides: [
     {
-      files: ["src/**/*.{ts,tsx}"],
+      files: ["**/*.{ts,tsx}"],
       rules: {
         "zypsy/restricted-syntax": [
           "error",
