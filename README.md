@@ -48,13 +48,41 @@ What the config does:
 
 - **Type-aware.** The typescript-eslint `strict-type-checked` and `stylistic-type-checked` rules run through `oxlint-tsgolint`: floating promises, unsafe `any`, unnecessary assertions, deprecated APIs.
 - **React and the React Compiler rules**: rules of hooks, exhaustive dependencies, purity, immutability. `settings.react.version` is set to `19.3.0`; set yours if it differs.
-- **Imports**: no cycles, no duplicate imports, no `import { type A }` that leaves a side-effect import behind (write `import type { A }`), no default exports (except in `src/app`, stories and config files), no file extensions.
-- **House style** in `src/**`:
+- **Imports**: no cycles, no duplicate imports, no `import { type A }` that leaves a side-effect import behind (write `import type { A }`), no default exports (except in Next.js `app` directories, stories and config files), no file extensions.
+- **House style** in every `.js`, `.jsx`, `.ts` and `.tsx` file:
   - Arrow functions only, no `function` declarations or expressions.
   - No explicit return types on arrow functions: inference is enough.
   - `.at(0)` and `.at(-1)` instead of `array[0]` and `array[array.length - 1]`, which pairs with `noUncheckedIndexedAccess`.
   - No variable or parameter named `e`: write `event` or `error`.
+- **Monorepos**: the globs for Next.js `app` directories, config files, stories and `scripts` match at any depth, so one `oxlint.config.ts` at the root covers all packages, and so does one per package.
 - Rules still in oxlint's nursery stay off until they are stable: `no-unnecessary-condition`, `prefer-optional-chain`, `import/export`, `no-undef`, `react/require-render-return`.
+
+### Paths
+
+Every rule set is scoped by globs that work in a single app and in a monorepo. To use your own paths, build the config with `createConfig`. Each key of `files` you pass replaces that key's default globs, so spread `defaultFiles` to add to them:
+
+```ts
+import { createConfig, defaultFiles } from "@zypsy/configs/oxlint";
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  extends: [
+    createConfig({
+      files: {
+        // Default exports also in Remix routes.
+        defaultExports: [...defaultFiles.defaultExports, "**/routes/**/*.tsx"],
+      },
+    }),
+  ],
+});
+```
+
+The keys:
+
+- `allJsTs`: the house style and the import rules (cycles, duplicates, default exports). Defaults to every `.js`, `.jsx`, `.ts` and `.tsx` file.
+- `allTs`: the TypeScript rules, type-aware ones included. Defaults to every `.ts` and `.tsx` file.
+- `defaultExports`: where `export default` is allowed. Defaults to Next.js `app` directories, stories, Storybook and the Playwright, Tailwind, Vite, oxlint and oxfmt config files.
+- `node`: files that get Node globals. Defaults to JavaScript files at the root, `*.config.{js,cjs,mjs}` files and `scripts` directories.
 
 ## oxlint plugin
 
@@ -68,7 +96,7 @@ export default defineConfig({
   extends: [zypsy],
   overrides: [
     {
-      files: ["src/**/*.{ts,tsx}"],
+      files: ["**/*.{ts,tsx}"],
       rules: {
         "zypsy/restricted-syntax": [
           "error",

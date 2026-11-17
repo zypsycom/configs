@@ -16,8 +16,8 @@ interface Diagnostic {
   labels: Array<{ span: { line: number } }>;
 }
 
-const lint = (name: string) => {
-  const result = spawnSync(oxlint, ["-f", "json", "src"], {
+const lint = (name: string, path = "src") => {
+  const result = spawnSync(oxlint, ["-f", "json", path], {
     cwd: fixture(name),
     encoding: "utf8",
   });
@@ -100,4 +100,44 @@ void test("a project can add selectors and keep the shared ones", () => {
   const messages = extended.map((diagnostic) => diagnostic.message);
   assert.ok(messages.includes("Use a union of string literals."));
   assert.ok(messages.includes("Using 'FunctionDeclaration' is not allowed."));
+});
+
+const ruleAt = (list: ReturnType<typeof lint>, rule: string, file: string) =>
+  list.some(
+    (diagnostic) => diagnostic.rule === rule && diagnostic.file === file,
+  );
+
+void test("one root config covers every package of a monorepo", () => {
+  const monorepo = lint("monorepo", "packages");
+  assert.ok(
+    ruleAt(monorepo, "eslint(func-style)", "packages/web/src/lib/declared.ts"),
+  );
+  assert.ok(
+    !ruleAt(
+      monorepo,
+      "import(no-default-export)",
+      "packages/web/src/app/page.ts",
+    ),
+  );
+  assert.ok(
+    ruleAt(
+      monorepo,
+      "import(no-default-export)",
+      "packages/web/src/lib/other.ts",
+    ),
+  );
+});
+
+void test("the house style covers JavaScript too", () => {
+  const monorepo = lint("monorepo", "packages");
+  assert.ok(
+    ruleAt(monorepo, "eslint(func-style)", "packages/web/src/lib/legacy.js"),
+  );
+});
+
+void test("createConfig replaces the default-export paths", () => {
+  const custom = lint("custom");
+  const noDefaultExport = "import(no-default-export)";
+  assert.ok(!ruleAt(custom, noDefaultExport, "src/routes/route.ts"));
+  assert.ok(ruleAt(custom, noDefaultExport, "src/other.ts"));
 });
