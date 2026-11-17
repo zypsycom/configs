@@ -81,8 +81,8 @@ The keys:
 
 - `allJsTs`: the house style and the import rules (cycles, duplicates, default exports). Defaults to every `.js`, `.jsx`, `.ts` and `.tsx` file.
 - `allTs`: the TypeScript rules, type-aware ones included. Defaults to every `.ts` and `.tsx` file.
-- `defaultExports`: where `export default` is allowed. Defaults to Next.js `app` directories, stories, Storybook and the Playwright, Tailwind, Vite, oxlint and oxfmt config files.
-- `node`: files that get Node globals. Defaults to JavaScript files at the root, `*.config.{js,cjs,mjs}` files and `scripts` directories.
+- `defaultExports`: where `export default` is allowed. Defaults to Next.js `app` directories, stories, Storybook and every `*.config.*` file (Next.js, PostCSS, Vitest, Playwright, oxlint and the like).
+- `node`: files that get Node globals and may import with file extensions, which Node's ES modules need. Defaults to JavaScript files at the root, `*.config.{js,cjs,mjs}` files and `scripts` directories.
 
 ## oxlint plugin
 

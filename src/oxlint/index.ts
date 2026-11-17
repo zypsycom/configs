@@ -8,7 +8,9 @@ export const restrictedSyntax: RestrictedSyntaxOption[] = [
   "FunctionExpression",
   "FunctionDeclaration",
   {
-    selector: "ArrowFunctionExpression[returnType]",
+    // Type predicates can't be inferred from every guard, so they stay allowed
+    selector:
+      "ArrowFunctionExpression[returnType]:not([returnType.typeAnnotation.type='TSTypePredicate'])",
     message:
       "Arrow functions should not have explicit return types, let TypeScript infer them.",
   },
@@ -37,13 +39,9 @@ export const defaultFiles = {
   node: ["*.{js,cjs,mjs}", "**/*.config.{js,cjs,mjs}", "**/scripts/**"],
   // Default exports allowed: config files, stories and Next.js `app` directories.
   defaultExports: [
-    "**/playwright.config.ts",
-    "**/tailwind.config.ts",
-    "**/vite.config.ts",
+    "**/*.config.{js,cjs,mjs,ts,cts,mts}",
     "**/*.stories.{ts,tsx}",
     "**/.storybook/**/*.{ts,tsx}",
-    "**/oxlint.config.ts",
-    "**/oxfmt.config.ts",
     "**/app/**/*.{ts,tsx}",
   ],
 };
@@ -197,8 +195,8 @@ export const createConfig = ({
       "react/incompatible-library": "warn",
       "react/immutability": "error",
       "react/globals": "error",
-      "react/refs": "off",
-      "react/set-state-in-effect": "off",
+      "react/refs": "error",
+      "react/set-state-in-effect": "error",
       "react/error-boundaries": "error",
       "react/purity": "error",
       "react/set-state-in-render": "error",
@@ -230,6 +228,10 @@ export const createConfig = ({
         files: files.node,
         env: {
           node: true,
+        },
+        rules: {
+          // Node's ES modules resolve relative imports only with their extension
+          "import/extensions": "off",
         },
       },
       {
