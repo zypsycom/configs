@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/zypsycom/configs/compare/v0.2.0...v0.3.0) (2026-11-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **oxlint:** enable the React Compiler refs and set-state-in-effect rules ([#6](https://github.com/zypsycom/configs/issues/6))
+
+### Features
+
+* **oxlint:** enable the React Compiler refs and set-state-in-effect rules ([#6](https://github.com/zypsycom/configs/issues/6)) ([c734fa5](https://github.com/zypsycom/configs/commit/c734fa54d103fb3edd2d516d7692e356efd23e1f))
+
 ## [0.2.0](https://github.com/zypsycom/configs/compare/v0.1.1...v0.2.0) (2026-11-17)
 
 
